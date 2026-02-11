@@ -4,7 +4,7 @@
 
 // project sources
 #include "main.h"
-#include "system.h"
+#include "utils.h"
 #include "math.h"
 #include "text.h"
 #include "input.h"
@@ -19,7 +19,11 @@
 #define SPLIT_LINE_1 8
 #define SPLIT_LINE_2 135
 
-volatile uint8_t inside_sign_draw = 0;
+// strings
+const char __far str_cylinder_top[] = "The Mighty Non-Binary Cylinder!";
+const char __far str_cylinder_bottom[] = "My 1st demoscene-ish effect ^_^";
+
+uint8_t inside_sign_draw = 0;
 
 // coarse/fine scroll -- increment by arbitrary amount, then use upper 8 bits for scroll register
 uint16_t text_scroll_x = 0;
@@ -70,6 +74,22 @@ __attribute__((assume_ss_data, interrupt)) void __far line_int_handler(void)
 	ia16_enable_irq();
 }
 
+void print_text(void)
+{
+	if (show_text)
+	{
+		// if text is enabled, print it
+		print_string_static(8, 0, str_cylinder_top);
+		print_string_static(20, 17, str_cylinder_bottom);
+	}
+	else
+	{
+		// else, clear both lines of the tilemap
+		ws_screen_fill_tiles(&wse_screen2, 0x020 | WS_SCREEN_ATTR_BANK(0) | WS_SCREEN_ATTR_PALETTE(4), 0, 0, WS_SCREEN_WIDTH_TILES, 1);
+		ws_screen_fill_tiles(&wse_screen2, 0x020 | WS_SCREEN_ATTR_BANK(0) | WS_SCREEN_ATTR_PALETTE(4), 0, 17, WS_SCREEN_WIDTH_TILES, 1);
+	}
+}
+
 void init_mode_cylinder(void)
 {
 	// disable LCD output
@@ -104,6 +124,9 @@ void init_mode_cylinder(void)
 	// set sprite count
 	outportb(WS_SPR_COUNT_PORT, SINE_SPRITE_COUNT);
 
+	// print text once
+	print_text();
+
 	// enable LCD output
 	ws_lcd_control_enable();
 
@@ -113,18 +136,6 @@ void init_mode_cylinder(void)
 
 void run_mode_cylinder(void)
 {
-	// if text is enabled, print it
-	if (show_text)
-	{
-		print_string(8, 0, "The Mighty Non-Binary Cylinder!");
-		print_string(20, 17, "My 1st demoscene-ish effect ^_^");
-	}
-	else
-	{
-		print_string(8, 0, "");
-		print_string(20, 17, "");
-	}
-
 	// update sprites
 	ws_sprite_t* cylinder_sprite = NULL;
 	uint8_t i, j;
@@ -141,8 +152,12 @@ void run_mode_cylinder(void)
 			cylinder_sprite->attr |= WS_SPRITE_ATTR_PRIORITY;
 	}
 
-	// A button: toggle text
-	if (buttons_pressed_now & WS_KEY_A) show_text = !show_text;
+	// A button: toggle text, then print it once
+	if (buttons_pressed_now & WS_KEY_A)
+	{
+		show_text = !show_text;
+		print_text();
+	}
 
 	// update various variables
 	sine_offset_x += 128;

@@ -2,25 +2,20 @@
 // February 2026 by xdaniel
 // https://bsky.app/profile/xdaniel.neocities.org
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <wonderful.h>
 #include <ws.h>
 #include <wse.h>
 
 // project sources
 #include "main.h"
-#include "system.h"
-#include "text.h"
+#include "utils.h"
 #include "input.h"
-#include "math.h"
 #include "mode_main.h"
 #include "mode_cylinder.h"
 
 // project assets
 #include "graphics/font.h"
 #include "graphics/background.h"
-#include "graphics/background2.h"
 
 volatile uint16_t vbl_ticks;
 

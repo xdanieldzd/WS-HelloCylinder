@@ -4,13 +4,20 @@
 #include <wse.h>
 
 // pointer & buffer for printing
-const char* ptr;
-char buf[512];
+const char __far * ptr;
+char buf[128];
 
 // temporary variables
 uint8_t x_pos, len;
 
-void print_string(uint8_t x, uint8_t y, const char* fmt, ...)
+void print_string_static(uint8_t x, uint8_t y, const char __far * str)
+{
+	// print string while also clearing current line with spaces
+	for (ptr = str, x_pos = 0, len = 0; (x_pos >= x ? len++ : len) < WS_SCREEN_WIDTH_TILES; x_pos++)
+		ws_screen_put_tile(&wse_screen2, (x_pos >= x && *ptr != '\0' ? *ptr++ : 0x020) | WS_SCREEN_ATTR_BANK(0) | WS_SCREEN_ATTR_PALETTE(4), x_pos, y);
+}
+
+void print_string(uint8_t x, uint8_t y, const char __far * fmt, ...)
 {
 	// handle variadic function arguments & generate string in buffer
 	va_list args;
