@@ -1,6 +1,8 @@
 #include <wonderful.h>
 #include <ws.h>
 
+#include "main.h"
+
 void enable_interrupts(void)
 {
 	// acknowledge all interrupts
@@ -24,6 +26,7 @@ void disable_interrupts(void)
 
 void wait_for_vblank(void)
 {
-	// halt CPU until next interrupt
-	ia16_halt();
+	// halt CPU until next Vblank interrupt
+	uint16_t last_vbl_ticks = vbl_ticks;
+	while (last_vbl_ticks == vbl_ticks) ia16_halt();
 }

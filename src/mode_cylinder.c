@@ -16,17 +16,20 @@
 #define SINE_SPRITE_COUNT (WS_SPRITE_MAX_COUNT - 16)
 
 // scanlines for line match interrupt
-#define SPLIT_LINE_1 8
-#define SPLIT_LINE_2 135
+#define SPLIT_LINE_1 158
+#define SPLIT_LINE_2 8
+#define SPLIT_LINE_3 135
 
 // strings
 const char __far str_cylinder_top[] = "The Mighty Non-Binary Cylinder!";
 const char __far str_cylinder_bottom[] = "My 1st demoscene-ish effect ^_^";
 
-uint8_t inside_sign_draw = 0;
+// set to line match interrupt scanlines, used to run different logic per screen area
+uint8_t next_line_match_scanline = SPLIT_LINE_1;
 
 // coarse/fine scroll -- increment by arbitrary amount, then use upper 8 bits for scroll register
-uint16_t text_scroll_x = 0;
+uint16_t top_text_scroll_x = 0;
+uint16_t bottom_text_scroll_x = 0;
 uint16_t cylinder_scroll_y = 0;
 
 // coarse/fine offset -- same as scrolling above
@@ -35,36 +38,38 @@ uint16_t sine_offset_y = 64;
 
 uint8_t show_text = 1;
 
+// line match interrupt handler
 __attribute__((assume_ss_data, interrupt)) void __far line_int_handler(void)
 {
-	// line match interrupt handler
-
-	// if we're inside the cylinder area
-	if (inside_sign_draw)
+	if (next_line_match_scanline == SPLIT_LINE_1)
 	{
-		// scroll cylinder layer
-		ws_display_scroll_screen2_to(text_scroll_x >> 8, cylinder_scroll_y >> 8);
+		// screen split 1: top row of text -- no Y scroll, set X scroll to scroll text to the left
+		ws_display_scroll_screen2_to(top_text_scroll_x >> 8, 0);
+
+		// set next line match interrupt position & split area
+		outportb(WS_DISPLAY_LINE_IRQ_PORT, next_line_match_scanline = SPLIT_LINE_2);
+	}
+	else if (next_line_match_scanline == SPLIT_LINE_2)
+	{
+		// screen split 2: cylinder area -- no X scroll, set Y scroll to move cylinder up and down
+		ws_display_scroll_screen2_to(0, cylinder_scroll_y >> 8);
 
 		// configure display window to start 3 tiles down and end 3 tiles before the edge of the screen (Y=24, height=96)
 		ws_display_set_screen2_window(0, WS_DISPLAY_TILE_HEIGHT * 3, WS_DISPLAY_WIDTH_PIXELS, WS_DISPLAY_HEIGHT_PIXELS - (WS_DISPLAY_TILE_HEIGHT * 6));
-		// set next line match interrupt position
-		outportb(WS_DISPLAY_LINE_IRQ_PORT, SPLIT_LINE_2);
 
-		// next line match interrupt will be outside cylinder area
-		inside_sign_draw = 0;
+		// set next line match interrupt position & split area
+		outportb(WS_DISPLAY_LINE_IRQ_PORT, next_line_match_scanline = SPLIT_LINE_3);
 	}
-	else
+	else if (next_line_match_scanline == SPLIT_LINE_3)
 	{
-		// ensure cylinder layer scroll Y is 0
-		ws_display_scroll_screen2_to(text_scroll_x >> 8, 0);
+		// screen split 3: bottom row of text -- no Y scroll, set X scroll to scroll text to the right
+		ws_display_scroll_screen2_to(bottom_text_scroll_x >> 8, 0);
 
 		// configure display window to cover whole screen
 		ws_display_set_screen2_window(0, 0, WS_DISPLAY_WIDTH_PIXELS, WS_DISPLAY_HEIGHT_PIXELS);
-		// set next line match interrupt position
-		outportb(WS_DISPLAY_LINE_IRQ_PORT, SPLIT_LINE_1);
 
-		// next line match interrupt will be inside cylinder area
-		inside_sign_draw = 1;
+		// set next line match interrupt position & split area
+		outportb(WS_DISPLAY_LINE_IRQ_PORT, next_line_match_scanline = SPLIT_LINE_1);
 	}
 
 	// acknowledge interrupt
@@ -100,7 +105,7 @@ void init_mode_cylinder(void)
 
 	// set line match interrupt handler & set first line match interrupt position
 	ws_int_set_handler(WS_INT_LINE_MATCH, line_int_handler);
-	outportb(WS_DISPLAY_LINE_IRQ_PORT, SPLIT_LINE_1);
+	outportb(WS_DISPLAY_LINE_IRQ_PORT, next_line_match_scanline);
 
 	wait_for_vblank();
 
@@ -164,5 +169,6 @@ void run_mode_cylinder(void)
 	sine_offset_y += 2;
 
 	cylinder_scroll_y = 0x1000 - (sin(sine_offset_y) << 5);
-	text_scroll_x += 96;
+	top_text_scroll_x += 96;
+	bottom_text_scroll_x -= 96;
 }
