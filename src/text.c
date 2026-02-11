@@ -18,7 +18,7 @@ void print_string(uint8_t x, uint8_t y, const char* fmt, ...)
 	vsnprintf(buf, sizeof buf, fmt, args);
     va_end(args);
 
-	// print string while also clearing current link with spaces
+	// print string while also clearing current line with spaces
 	for (ptr = buf, x_pos = 0, len = 0; (x_pos >= x ? len++ : len) < WS_SCREEN_WIDTH_TILES; x_pos++)
 		ws_screen_put_tile(&wse_screen2, (x_pos >= x && *ptr != '\0' ? *ptr++ : 0x020) | WS_SCREEN_ATTR_BANK(0) | WS_SCREEN_ATTR_PALETTE(4), x_pos, y);
 }
