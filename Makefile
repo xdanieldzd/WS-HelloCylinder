@@ -19,6 +19,8 @@ SOURCEDIRS	:= src
 ASSETDIRS	:= assets
 CBINDIRS	:= cbin
 
+VERSIONFILE	:= $(SOURCEDIRS)/version.c
+
 # Defines passed to all files
 # ---------------------------
 
@@ -100,7 +102,12 @@ DEPS		:= $(OBJS:.o=.d)
 
 .PHONY: all clean usage
 
-all: $(ROM) compile_commands.json
+all: version $(ROM) compile_commands.json
+
+version:
+	@if [ -f $(VERSIONFILE) ]; then \
+		touch $(VERSIONFILE); \
+	fi
 
 $(ROM) $(ELF): $(ELF_STAGE1)
 	@echo "  ROM     $@"

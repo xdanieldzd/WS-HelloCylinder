@@ -88,7 +88,7 @@ void init_mode_main(void)
 	main_sprite->x = 224 - 12;
 	main_sprite->y = 144 - 12;
 	// 0x10 is a smiley face in the font tileset
-	main_sprite->attr = 0x010 | WS_SPRITE_ATTR_PALETTE(4);
+	main_sprite->attr = 0x010 | WS_SPRITE_ATTR_PALETTE(15);
 
 	// set sprite count
 	outportb(WS_SPR_COUNT_PORT, 0x01);

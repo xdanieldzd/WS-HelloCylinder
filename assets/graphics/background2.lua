@@ -5,7 +5,7 @@ local background2 = superfamiconv.convert_tilemap(
 	"background2.png",
 	superfamiconv.config()
 		:mode("wsc"):bpp(4)
-		:tile_base(384):palette_base(1)
+		:tile_base(384):no_remap()
 )
 
 process.emit_symbol("gfx_background2", background2)

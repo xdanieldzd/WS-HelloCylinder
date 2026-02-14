@@ -64,10 +64,6 @@ void init_video(void)
 	ws_display_scroll_screen1_to(0, 0);
 	ws_display_scroll_screen2_to(0, 0);
 
-	// clear screen 1 (background, to 0) & screen 2 (text and cylinder, to space character)
-	ws_screen_fill_tiles(&wse_screen1, 0x000 | WS_SCREEN_ATTR_BANK(0) | WS_SCREEN_ATTR_PALETTE(0), 0, 0, WS_SCREEN_WIDTH_TILES, WS_SCREEN_HEIGHT_TILES);
-	ws_screen_fill_tiles(&wse_screen2, 0x020 | WS_SCREEN_ATTR_BANK(0) | WS_SCREEN_ATTR_PALETTE(4), 0, 0, WS_SCREEN_WIDTH_TILES, WS_SCREEN_HEIGHT_TILES);
-
 	// enable screen 1, screen 2, sprites
 	ws_display_set_control(WS_DISPLAY_CTRL_SCR1_ENABLE | WS_DISPLAY_CTRL_SCR2_ENABLE | WS_DISPLAY_CTRL_SPR_ENABLE);
 
@@ -86,15 +82,17 @@ void main(void)
 
 	// copy font tiles and palette via WSC GDMA
 	ws_gdma_copy(WS_TILE_4BPP_MEM(0x000), gfx_font_tiles, gfx_font_tiles_size);
-	ws_gdma_copy(WS_SCREEN_COLOR_MEM(4), gfx_font_palette, gfx_font_palette_size);
-	ws_gdma_copy(WS_SPRITE_COLOR_MEM(4), gfx_font_palette, gfx_font_palette_size);
+	ws_gdma_copy(WS_DISPLAY_COLOR_MEM(15), gfx_font_palette, gfx_font_palette_size);
 
 	// copy background tiles and palette via WSC GDMA
 	ws_gdma_copy(WS_TILE_4BPP_MEM(0x100), gfx_background_tiles, gfx_background_tiles_size);
-	ws_gdma_copy(WS_SCREEN_COLOR_MEM(0), gfx_background_palette, gfx_background_palette_size);
+	ws_gdma_copy(WS_DISPLAY_COLOR_MEM(0), gfx_background_palette, gfx_background_palette_size);
 
 	// copy background tilemap via WSC GDMA
 	ws_gdma_copy(&wse_screen1, gfx_background_map, gfx_background_map_size);
+
+	// set background color to color 0 of background palette (0)
+	outportb(WS_DISPLAY_BACK_PORT, 0x00);
 
 	// start in cylinder mode, with BG scrolling enabled
 	mode = MODE_CYLINDER_INIT;
